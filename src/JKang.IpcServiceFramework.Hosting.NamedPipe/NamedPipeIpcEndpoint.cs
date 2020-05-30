@@ -40,7 +40,17 @@ namespace JKang.IpcServiceFramework.Hosting.NamedPipe
                 PipeSecurity pipeSecurity = new PipeSecurity();
                 PipeAccessRule psRule = new PipeAccessRule(@"Everyone", PipeAccessRights.FullControl, System.Security.AccessControl.AccessControlType.Allow);
                 pipeSecurity.AddAccessRule(psRule);
-                using (var server = NamedPipeNative.CreateNamedPipe(_options.PipeName, (uint) _options.MaxConcurrentCalls, pipeSecurity))
+                using (var server = NamedPipeNativeWindows.CreateNamedPipe(_options.PipeName, (uint) _options.MaxConcurrentCalls, pipeSecurity))
+                {
+                    await server.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
+                    await process(server, cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            // Linux FIFO (named pipe) permissions
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                using (var server = NamedPipeNativeLinux.CreateNamedPipe(_options.PipeName, 0777))
                 {
                     await server.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
                     await process(server, cancellationToken).ConfigureAwait(false);

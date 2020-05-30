@@ -11,7 +11,7 @@ namespace JKang.IpcServiceFramework.Hosting.NamedPipe
     /// Native API for Named Pipes
     /// https://github.com/PowerShell/PowerShell/blob/master/src/System.Management.Automation/engine/remoting/common/RemoteSessionNamedPipe.cs#L124-L256
     /// </summary>
-    internal static class NamedPipeNative
+    internal static class NamedPipeNativeWindows
     {
         #region Pipe constants
 
@@ -72,7 +72,7 @@ namespace JKang.IpcServiceFramework.Hosting.NamedPipe
 
         internal static SECURITY_ATTRIBUTES GetSecurityAttributes(GCHandle securityDescriptorPinnedHandle, bool inheritHandle = false)
         {
-            SECURITY_ATTRIBUTES securityAttributes = new NamedPipeNative.SECURITY_ATTRIBUTES();
+            SECURITY_ATTRIBUTES securityAttributes = new NamedPipeNativeWindows.SECURITY_ATTRIBUTES();
             securityAttributes.InheritHandle = inheritHandle;
             securityAttributes.NLength = (int)Marshal.SizeOf(securityAttributes);
             securityAttributes.LPSecurityDescriptor = securityDescriptorPinnedHandle.AddrOfPinnedObject();
@@ -97,7 +97,7 @@ namespace JKang.IpcServiceFramework.Hosting.NamedPipe
             CommonSecurityDescriptor securityDesc = new CommonSecurityDescriptor(false, false, pipeSecurity.GetSecurityDescriptorBinaryForm(), 0);
 
             // Create optional security attributes based on provided PipeSecurity.
-            NamedPipeNative.SECURITY_ATTRIBUTES securityAttributes = null;
+            NamedPipeNativeWindows.SECURITY_ATTRIBUTES securityAttributes = null;
             GCHandle? securityDescHandle = null;
             if (securityDesc != null)
             {
@@ -105,20 +105,20 @@ namespace JKang.IpcServiceFramework.Hosting.NamedPipe
                 securityDesc.GetBinaryForm(securityDescBuffer, 0);
 
                 securityDescHandle = GCHandle.Alloc(securityDescBuffer, GCHandleType.Pinned);
-                securityAttributes = NamedPipeNative.GetSecurityAttributes(securityDescHandle.Value);
+                securityAttributes = NamedPipeNativeWindows.GetSecurityAttributes(securityDescHandle.Value);
             }
 
-            uint openMode = NamedPipeNative.PIPE_ACCESS_DUPLEX | NamedPipeNative.FILE_FLAG_OVERLAPPED;
+            uint openMode = NamedPipeNativeWindows.PIPE_ACCESS_DUPLEX | NamedPipeNativeWindows.FILE_FLAG_OVERLAPPED;
             if (maxNumberOfServerInstances == 1)
             {
-                openMode |= NamedPipeNative.FILE_FLAG_FIRST_PIPE_INSTANCE;
+                openMode |= NamedPipeNativeWindows.FILE_FLAG_FIRST_PIPE_INSTANCE;
             }
 
             // Create named pipe.
-            SafePipeHandle pipeHandle = NamedPipeNative.CreateNamedPipe(
+            SafePipeHandle pipeHandle = NamedPipeNativeWindows.CreateNamedPipe(
                 fullPipeName,
                 openMode,
-                NamedPipeNative.PIPE_TYPE_BYTE | NamedPipeNative.PIPE_READMODE_BYTE,
+                NamedPipeNativeWindows.PIPE_TYPE_BYTE | NamedPipeNativeWindows.PIPE_READMODE_BYTE,
                 maxNumberOfServerInstances,
                 1,
                 1,
